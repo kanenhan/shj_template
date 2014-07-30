@@ -1,0 +1,18 @@
+apply plugin: 'jetty'
+apply plugin: 'war'
+apply plugin: 'eclipse-wtp'
+
+group = 'max_ci_plugins'
+
+repositories {
+	//mavenCentral()
+	mavenLocal()
+	//flatDir(dirs: "$projectDir/libs") 
+}
+
+dependencies {
+   compile  fileTree(dir: 'libs', include: '*.jar')
+}
+
+/* Change context path (base url). otherwise defaults to name of project */
+jettyRunWar.contextPath = '' 

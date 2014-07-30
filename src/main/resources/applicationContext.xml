@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>   
+<beans xmlns="http://www.springframework.org/schema/beans"  
+ xmlns:aop="http://www.springframework.org/schema/aop" 
+ xmlns:context="http://www.springframework.org/schema/context"  
+ xmlns:p="http://www.springframework.org/schema/p" 
+ xmlns:tx="http://www.springframework.org/schema/tx"  
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+ xsi:schemaLocation="
+   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">  
+
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
+        <property name="locations">
+            <list>
+                <value>classpath:jdbc.properties</value>
+                <value>classpath:common.properties</value>
+            </list>
+        </property>
+    </bean>
+    
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+	    <property name="driverClassName" value="${jdbc.driverClassName}"/>
+	    <property name="url" value="${jdbc.url}"/>
+	    <property name="username" value="${jdbc.username}"/>
+	    <property name="password" value="${jdbc.password}"/>
+	</bean>
+	 <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+    	<property name="dataSource" ref="dataSource"/>
+    	<!-- xml实体映射使用
+    	<property name="mappingLocations">
+            <value>classpath*:/org/ltsh/**/*.hbm.xml</value> 
+        </property>
+        -->
+          <property name="packagesToScan">
+			<list>
+			     <value>com.test.model</value>
+			</list>
+		</property>
+	    <property name="hibernateProperties">
+	      <props>
+	      	 <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+             <prop key="hibernate.show_sql">false</prop>
+             <prop key="hibernate.format_sql">true</prop>
+             <prop key="hibernate.jdbc.use_scrollable_resultset">false</prop>
+             <prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate4.SpringSessionContext</prop>
+	      </props>
+	     
+	    </property>
+  	</bean>
+  	
+	 <!-- 默认的注解映射的支持 -->
+     <context:annotation-config />
+	 <context:component-scan base-package="com.test" use-default-filters="false">  <!-- 自动扫描该包路径下的所有注解 -->
+  		<context:include-filter type="regex" expression="com\.test\.service\.impl\..*"/>
+  		<context:include-filter type="regex" expression="com\.test\.dao\.impl\..*"/>
+	 </context:component-scan>
+	 
+	<bean id="txManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<tx:advice id="baseServiceAdvice" transaction-manager="txManager">
+	   <tx:attributes>
+	      <tx:method name="add*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="save" propagation="REQUIRED"	rollback-for="java.lang.Exception" />
+			<tx:method name="save*" propagation="REQUIRED"	rollback-for="java.lang.Exception" />
+			<tx:method name="del*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="ex*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="up*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="sub*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="make*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="to*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="discard*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="pass*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="amend*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="no*" propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="get*" propagation="REQUIRED" read-only="true" />  
+	        <tx:method name="count*" propagation="REQUIRED" read-only="true" />  
+	        <tx:method name="find*" propagation="REQUIRED" read-only="true" />  
+	        <tx:method name="list*" propagation="REQUIRED" read-only="true" />  
+	        <tx:method name="*" read-only="true" />
+	   </tx:attributes>
+	</tx:advice>
+	 <aop:config proxy-target-class="true">
+		<aop:pointcut id="tradeCuts" expression="execution(* com.test.service.impl.*.*(..))" />
+		<aop:advisor advice-ref="baseServiceAdvice" pointcut-ref="tradeCuts" />
+	</aop:config>
+	
+	
+</beans>
